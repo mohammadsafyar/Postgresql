@@ -1,0 +1,48 @@
+-- ============================================================
+-- 14. Checkpoint & WAL Statistics
+-- بررسی وضعیت Checkpoint ها و تنظیمات WAL
+-- ============================================================
+--
+-- هدف:
+-- شناسایی Checkpoint های اجباری (Requested Checkpoints)
+-- و بررسی فشار I/O ناشی از WAL
+--
+-- راهنمای تفسیر:
+--
+-- checkpoints_timed
+-- تعداد Checkpoint های برنامه‌ریزی شده
+--
+-- checkpoints_req
+-- تعداد Checkpoint های اجباری
+-- اگر مقدار آن زیاد باشد معمولاً max_wal_size کوچک است.
+--
+-- checkpoint_write_time
+-- زمان صرف شده برای نوشتن صفحات Dirty
+--
+-- checkpoint_sync_time
+-- زمان صرف شده برای Sync دیسک
+--
+-- buffers_checkpoint
+-- تعداد Bufferهایی که توسط Checkpoint نوشته شده‌اند
+--
+-- buffers_clean
+-- تعداد Bufferهایی که Background Writer نوشته است
+--
+-- buffers_backend
+-- تعداد Bufferهایی که Backend Processها مجبور به نوشتن شده‌اند.
+-- مقدار زیاد نشانه فشار I/O یا تنظیمات نامناسب است.
+--
+-- وضعیت مطلوب:
+-- checkpoints_timed > checkpoints_req
+-- buffers_backend نزدیک به صفر باشد.
+--
+
+SELECT
+    checkpoints_timed,
+    checkpoints_req,
+    checkpoint_write_time,
+    checkpoint_sync_time,
+    buffers_checkpoint,
+    buffers_clean,
+    buffers_backend
+FROM pg_stat_bgwriter;

@@ -1,0 +1,18 @@
+-- ============================================================
+-- 11. Temporary File Usage
+-- بررسی مصرف فایل‌های موقت ایجاد شده توسط PostgreSQL
+-- شناسایی Spill شدن عملیات Sort و Hash به دیسک
+-- ============================================================
+
+-- اگر temp_bytes یا temp_files مقدار بالایی داشته باشند،
+-- معمولاً نشان‌دهنده کم بودن work_mem است.
+-- در این حالت PostgreSQL به جای استفاده از RAM،
+-- فایل‌های موقت روی دیسک ایجاد می‌کند که باعث افت Performance می‌شود.
+
+SELECT
+    datname,
+    temp_files,
+    pg_size_pretty(temp_bytes) AS temp_size
+FROM pg_stat_database
+ORDER BY temp_bytes DESC;
+

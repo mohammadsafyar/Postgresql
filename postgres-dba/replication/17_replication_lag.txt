@@ -1,0 +1,55 @@
+-- ============================================================
+-- 17. Streaming Replication Status
+-- بررسی وضعیت Replication و میزان Lag
+-- ============================================================
+--
+-- هدف:
+-- بررسی سلامت Replica ها و میزان تاخیر Replication
+--
+-- راهنمای تفسیر:
+--
+-- client_addr
+-- آدرس Replica
+--
+-- state
+-- وضعیت Replication
+-- مقدار مطلوب: streaming
+--
+-- sent_lsn
+-- آخرین WAL ارسال شده
+--
+-- write_lsn
+-- آخرین WAL نوشته شده روی Replica
+--
+-- flush_lsn
+-- آخرین WAL ذخیره شده روی دیسک Replica
+--
+-- replay_lsn
+-- آخرین WAL اعمال شده روی Replica
+--
+-- replay_lag_bytes
+-- میزان تاخیر اعمال WAL بر حسب Byte
+--
+-- وضعیت مطلوب:
+-- replay_lag_bytes نزدیک صفر باشد.
+--
+-- نیاز به بررسی:
+-- Lag چند صد MB یا چند GB
+--
+-- علل رایج:
+-- - کندی شبکه
+-- - کندی Storage روی Replica
+-- - فشار زیاد WAL Generation
+-- - Long Running Query روی Replica
+--
+
+SELECT
+    client_addr,
+    state,
+    sent_lsn,
+    write_lsn,
+    flush_lsn,
+    replay_lsn,
+    pg_wal_lsn_diff(sent_lsn, replay_lsn) AS replay_lag_bytes
+FROM pg_stat_replication;
+FROM pg_stat_replication;

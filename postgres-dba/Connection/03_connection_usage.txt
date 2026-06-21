@@ -1,0 +1,56 @@
+-- ============================================================
+-- 03. Connection Usage & Capacity
+-- بررسی میزان استفاده از Connection های PostgreSQL
+-- ============================================================
+--
+-- هدف:
+-- بررسی تعداد Connection های فعال و میزان مصرف
+-- max_connections
+--
+-- راهنمای تفسیر:
+--
+-- active_connections
+-- تعداد Connection های فعلی
+--
+-- max_connections
+-- حداکثر Connection مجاز
+--
+-- usage_pct
+-- درصد استفاده از Connection ها
+--
+-- وضعیت مطلوب:
+-- کمتر از 70%
+--
+-- نیاز به بررسی:
+-- بیشتر از 80%
+--
+-- وضعیت بحرانی:
+-- بیشتر از 90%
+--
+-- نکته:
+-- مصرف بالای Connection می‌تواند نشان‌دهنده:
+-- - عدم استفاده از Connection Pooling
+-- - Leak شدن Connection ها در Application
+-- - تنظیم نامناسب max_connections
+--
+-- در صورت بالا بودن تعداد Connection ها،
+-- PgBouncer یا Connection Pooling بررسی شود.
+--
+
+SELECT
+    count(*) AS active_connections,
+    (
+        SELECT setting::int
+        FROM pg_settings
+        WHERE name = 'max_connections'
+    ) AS max_connections,
+    round(
+        count(*)::numeric /
+        (
+            SELECT setting::int
+            FROM pg_settings
+            WHERE name = 'max_connections'
+        ) * 100,
+        1
+    ) AS usage_pct
+FROM pg_stat_activity;

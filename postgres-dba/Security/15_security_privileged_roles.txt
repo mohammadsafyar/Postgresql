@@ -1,0 +1,43 @@
+-- ============================================================
+-- 15. Privileged Roles Audit
+-- بررسی Role های دارای دسترسی ویژه
+-- ============================================================
+--
+-- هدف:
+-- شناسایی Role هایی که دارای دسترسی های مدیریتی هستند.
+--
+-- راهنمای تفسیر:
+--
+-- rolsuper
+-- دسترسی Superuser (بالاترین سطح دسترسی)
+--
+-- rolcreaterole
+-- امکان ایجاد و مدیریت Role ها
+--
+-- rolcreatedb
+-- امکان ایجاد Database
+--
+-- rolcanlogin
+-- امکان Login به PostgreSQL
+--
+-- rolconnlimit
+-- محدودیت تعداد Connection
+--
+-- توصیه:
+-- تعداد Role های دارای rolsuper باید حداقل باشد.
+-- دسترسی createrole و createdb فقط به افراد یا سرویس‌های مورد نیاز داده شود.
+-- Role های بدون نیاز عملیاتی نباید دارای سطح دسترسی مدیریتی باشند.
+--
+
+SELECT
+    rolname,
+    rolsuper,
+    rolcreaterole,
+    rolcreatedb,
+    rolcanlogin,
+    rolconnlimit
+FROM pg_roles
+WHERE rolsuper
+   OR rolcreaterole
+   OR rolcreatedb
+ORDER BY rolname;
