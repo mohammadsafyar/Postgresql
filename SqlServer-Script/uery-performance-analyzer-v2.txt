@@ -1,0 +1,63 @@
+/*
+================================================================================
+TITLE       : Dynamic Query Troubleshooting Engine (v2)
+PURPOSE     : Unified performance analysis (CPU / IO / Latency / Frequency / Score)
+DESIGN      : Single query, mode-based ordering
+SOURCE      : sys.dm_exec_query_stats
+================================================================================
+*/
+
+DECLARE @mode INT = 1;  
+-- 1 = High Frequency
+-- 2 = High CPU
+-- 3 = High IO (Logical Reads)
+-- 4 = High Latency
+-- 5 = Root Cause Score (recommended)
+
+SELECT TOP 50
+    qs.execution_count,
+
+    -- Total metrics
+    qs.total_worker_time,
+    qs.total_logical_reads,
+    qs.total_elapsed_time,
+
+    -- Averages
+    qs.total_worker_time / NULLIF(qs.execution_count,0) AS avg_cpu,
+    qs.total_logical_reads / NULLIF(qs.execution_count,0) AS avg_reads,
+    qs.total_elapsed_time / NULLIF(qs.execution_count,0) AS avg_duration,
+
+    -- Timing
+    qs.creation_time,
+    qs.last_execution_time,
+
+    -- Query text
+    qt.text AS query_text,
+
+    /* =========================================================
+       ROOT CAUSE SCORE (Impact-based weighting)
+       ========================================================= */
+    (
+        (qs.total_worker_time / 1000.0) * 0.4 +
+        (qs.total_logical_reads) * 0.3 +
+        (qs.total_elapsed_time / 1000.0) * 0.2 +
+        (qs.execution_count) * 0.1
+    ) AS root_cause_score
+
+FROM sys.dm_exec_query_stats qs
+CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) qt
+
+ORDER BY
+    CASE @mode
+        WHEN 1 THEN qs.execution_count
+        WHEN 2 THEN qs.total_worker_time
+        WHEN 3 THEN qs.total_logical_reads
+        WHEN 4 THEN qs.total_elapsed_time
+        WHEN 5 THEN
+            (
+                (qs.total_worker_time / 1000.0) * 0.4 +
+                (qs.total_logical_reads) * 0.3 +
+                (qs.total_elapsed_time / 1000.0) * 0.2 +
+                (qs.execution_count) * 0.1
+            )
+    END DESC;
