@@ -1,0 +1,33 @@
+/*
+===============================================================================
+Title       : Invalid Index Detection
+Description : Find all invalid indexes that are ignored by PostgreSQL Planner
+Author      : Mohammad Safyar
+===============================================================================
+*/
+
+SELECT
+    n.nspname AS schema_name,
+    t.relname AS table_name,
+    c.relname AS index_name,
+
+    CASE WHEN i.indisvalid THEN 'YES' ELSE 'NO' END AS is_valid,
+    CASE WHEN i.indisready THEN 'YES' ELSE 'NO' END AS is_ready,
+    CASE WHEN i.indislive  THEN 'YES' ELSE 'NO' END AS is_live,
+
+    pg_get_indexdef(c.oid) AS index_definition
+
+FROM pg_index i
+JOIN pg_class c
+    ON c.oid = i.indexrelid
+JOIN pg_class t
+    ON t.oid = i.indrelid
+JOIN pg_namespace n
+    ON n.oid = t.relnamespace
+
+WHERE NOT i.indisvalid
+
+ORDER BY
+    n.nspname,
+    t.relname,
+    c.relname;
